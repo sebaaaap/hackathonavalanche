@@ -1,0 +1,327 @@
+
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║                  ✅ SISTEMA LISTO PARA COMPILAR Y EJECUTAR                    ║
+║                                                                                ║
+║                    Catan + FastAPI + Blockchain (Avalanche)                   ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+🎯 FORMA MÁS SIMPLE (RECOMENDADA) - 2 COMANDOS
+═══════════════════════════════════════════════════════════════════════════════════
+
+  Opción A (Windows - Doble click):
+  ──────────────────────────────────
+  1. Haz doble click en: RUN.bat
+  2. Elige opción [A]
+  3. ¡Listo! La demo se ejecuta automáticamente
+
+
+  Opción B (Línea de comandos - Todos los SO):
+  ─────────────────────────────────────────────
+  1. python compile_and_run.py
+  2. cd models_venv && python launch_demo.py
+
+
+  Opción C (Manual en 2 terminales):
+  ───────────────────────────────────
+  Terminal 1:
+    cd api
+    uvicorn main:app --reload --port 8000
+
+  Terminal 2:
+    cd models_venv
+    python demo_game_blockchain.py
+
+
+📋 ARCHIVOS NECESARIOS
+═══════════════════════════════════════════════════════════════════════════════════
+
+✅ CREADOS EN ESTE PROCESO:
+
+  /api/
+    ├── main.py                    ← API FastAPI (conexión con blockchain)
+    ├── requirements.txt           ← Dependencias (fastapi, uvicorn, etc)
+    └── README.md                  ← Documentación técnica
+
+  /models_venv/
+    ├── trade_client.py            ← Cliente HTTP para enviar transacciones
+    ├── demo_game_blockchain.py    ← Simulación de partida completa
+    ├── launch_demo.py             ← Lanzador automático
+    ├── ejemplo_integracion.py     ← Ejemplos básicos
+    ├── README_API.md              ← Guía para modelos
+    └── DEMO_README.md             ← Detalles de la demo
+
+  /contract/
+    ├── .env                       ← ⭐ VARIABLES DE CONFIGURACIÓN
+    ├── scripts/
+    │   ├── API.py                 ← Ejecución de transacciones
+    │   └── get_balance.py         ← Lectura de saldos
+    └── ... (resto de contrato)
+
+  RAÍZ DEL PROYECTO:
+    ├── compile_and_run.py         ← Compilador y verificador
+    ├── RUN.bat                    ← Lanzador Windows
+    ├── verify_setup.py            ← Verificador de setup
+    ├── COMPILAR_Y_EJECUTAR.md     ← Esta documentación
+    ├── BLOCKCHAIN_INTEGRATION.md  ← Documentación técnica completa
+    └── DEMO_QUICK_START.md        ← Inicio rápido
+
+
+⚡ REQUISITOS PREVIOS (¡MUY IMPORTANTE!)
+═══════════════════════════════════════════════════════════════════════════════════
+
+1. PYTHON 3.8+
+   ✅ Instalar desde: https://www.python.org
+   ✅ Verificar: python --version
+
+
+2. VARIABLES DE ENTORNO (.env en /contract)
+   ───────────────────────────────────────────
+   Debe contener (EXACTAMENTE):
+   
+     PRIVATE_KEY_ADMIN_L1="0x..."     (clave privada del admin)
+     PRIVATE_KEY_MODELO_A="0x..."     (clave privada de Alice)
+     PRIVATE_KEY_MODELO_B="0x..."     (clave privada de Bob)
+     CATAN_ADDRESS="0x..."             (dirección del contrato desplegado)
+     RPC_URL="https://api.avax-test.network/ext/bc/C/rpc"
+
+   ✅ Ya está configurado en: /contract/.env
+
+
+3. CONTRATO DESPLEGADO
+   ────────────────────
+   ✅ El contrato ERC-1155 debe estar en Avalanche Testnet
+   ✅ Su dirección debe estar en CATAN_ADDRESS
+
+
+4. SALDO EN AVALANCHE FUJI TESTNET
+   ────────────────────────────────
+   ✅ Necesitas AVAX para pagar gas de transacciones
+   ✅ Obtén AVAX gratis en: https://faucet.avax.network
+   ✅ Las direcciones en .env deben tener AVAX
+
+
+🔧 PASO A PASO DETALLADO
+═══════════════════════════════════════════════════════════════════════════════════
+
+PASO 1: COMPILAR Y VERIFICAR
+  $ python compile_and_run.py
+
+  Esto:
+  ✅ Verifica que tienes todos los archivos
+  ✅ Valida que el .env está configurado
+  ✅ Instala todas las dependencias
+  ✅ Te muestra exactamente qué ejecutar
+
+  Salida esperada:
+    [1] VERIFICANDO ESTRUCTURA ..................... ✅
+    [2] VERIFICANDO CONFIGURACIÓN .................. ✅
+    [3] INSTALANDO DEPENDENCIAS API ............... ✅
+    [4] INSTALANDO DEPENDENCIAS MODELOS ........... ✅
+    [5] VERIFICANDO ARCHIVOS CRÍTICOS ............ ✅
+    [6] ✅ COMPILACIÓN EXITOSA
+
+
+PASO 2: LEVANTAR API (Terminal 1 o automático)
+  $ cd api
+  $ uvicorn main:app --reload --port 8000
+
+  Espera a ver:
+    INFO:     Uvicorn running on http://127.0.0.1:8000
+    INFO:     Application startup complete
+
+  ✅ La API está lista en http://localhost:8000
+
+
+PASO 3: EJECUTAR DEMO (Terminal 2 o automático)
+  $ cd models_venv
+  $ python demo_game_blockchain.py
+
+  Verás:
+    🎮 CATAN CON BLOCKCHAIN - DEMO COMPLETA
+    💰 INICIALIZANDO BANCO Y DISTRIBUYENDO RECURSOS
+    [Transacciones en vivo]
+    🏁 FIN DE LA PARTIDA
+
+
+📊 ¿QUÉ HACE LA DEMO?
+═══════════════════════════════════════════════════════════════════════════════════
+
+1. INICIALIZACIÓN (30 segundos)
+   ─────────────────────────────
+   ├─ Alice recibe 18 recursos desde BANCO
+   ├─ Bob recibe 18 recursos desde BANCO
+   └─ Transacciones registradas en blockchain
+
+
+2. 10 TURNOS DE JUEGO (5-10 minutos)
+   ──────────────────────────────────
+   Cada turno:
+   ├─ 🎲 Tira dados (genera recursos)
+   ├─ 🌾 BANCO envía recursos según dados
+   ├─ 🏗️ Jugador construye (pueblo/carretera)
+   │   └─ Envía recursos al BANCO
+   └─ 💼 Jugador comercia con otro
+       └─ Transacción directa entre modelos
+
+
+3. RESULTADOS FINALES (10 segundos)
+   ────────────────────────────────
+   ├─ Balance final de cada jugador
+   ├─ Puntos obtenidos
+   └─ URLs para verificar en blockchain
+
+
+🌐 FLUJO COMPLETO
+═══════════════════════════════════════════════════════════════════════════════════
+
+  SIMULACIÓN (demo_game_blockchain.py)
+         │
+         │ HTTP POST /trade
+         │ HTTP GET /balance/{modelo}
+         ▼
+  API FASTAPI (api/main.py)
+         │
+         │ subprocess.run()
+         │
+         ▼
+  SCRIPTS BLOCKCHAIN (contract/scripts/API.py)
+         │
+         │ Web3.py (transacciones)
+         │
+         ▼
+  AVALANCHE BLOCKCHAIN (ERC-1155 Contract)
+         │
+         └─► Datos permanentes en blockchain ✅
+
+
+🔍 VERIFICAR TRANSACCIONES
+═══════════════════════════════════════════════════════════════════════════════════
+
+Después de ejecutar la demo:
+
+1. Copia un hash de transacción (ej: 0xabc123...)
+2. Ve a: https://testnet.snowtrace.io
+3. Pégalo en la búsqueda
+4. Verás todos los detalles en blockchain
+
+
+🎮 EJEMPLO DE TRANSACCIÓN
+═════════════════════════════════════════════════════════════════════════════════════
+
+En la terminal verás:
+
+  ✅ Recursos distribuidos a Alice
+     TX Hash: 0x123abc456def...
+
+En blockchain (Snowtrace) verás:
+  ├─ From: BANCO (0x...)
+  ├─ To: Alice (0x3486e19e51d16b73927F6449da7046ebC20f6d99)
+  ├─ Value: 0 AVAX
+  ├─ Function: safeTransferFrom (ID: 1, Qty: 5)
+  │            (enviando 5 MADERAS a Alice)
+  └─ Gas: 100,000-200,000 (costo ~0.001 AVAX)
+
+
+⚠️ ERRORES COMUNES Y SOLUCIONES
+═════════════════════════════════════════════════════════════════════════════════════
+
+ERROR: "Connection refused"
+───────────────────────────
+  Problema: No se puede conectar a la API
+  Solución: 
+    1. Verifica que Terminal 1 tiene API levantada
+    2. Intenta: http://localhost:8000 en navegador
+    3. Si da error 404: está bien, significa que API corre
+
+
+ERROR: "Module not found: fastapi"
+──────────────────────────────────
+  Problema: Falta instalar dependencias
+  Solución:
+    1. python compile_and_run.py
+    2. Esto instala todo automáticamente
+
+
+ERROR: "PRIVATE_KEY_ADMIN_L1 no está configurado"
+─────────────────────────────────────────────────
+  Problema: Falta configurar .env
+  Solución:
+    1. Edita: /contract/.env
+    2. Agrega las claves privadas
+    3. Verifica que compile_and_run.py lo detecta
+
+
+ERROR: "Transaction failed: insufficient funds"
+───────────────────────────────────────────────
+  Problema: No hay AVAX en las wallets
+  Solución:
+    1. Ve a: https://faucet.avax.network
+    2. Obtén AVAX gratis en Fuji Testnet
+    3. Copia las direcciones de las claves privadas
+    4. Solicita AVAX para cada una
+
+
+ERROR: "Contrato no existe en esa dirección"
+────────────────────────────────────────────
+  Problema: CATAN_ADDRESS es incorrecto
+  Solución:
+    1. Verifica que el contrato está deployado
+    2. Copia la dirección correcta
+    3. Actualiza CATAN_ADDRESS en .env
+
+
+🚀 EJECUTAR AHORA
+═════════════════════════════════════════════════════════════════════════════════════
+
+FORMA 1 (Windows - Más fácil):
+  1. Haz doble click en: RUN.bat
+  2. Elige opción [A]
+  ✅ ¡Listo!
+
+
+FORMA 2 (Línea de comandos - Todos los SO):
+  python compile_and_run.py
+  cd models_venv
+  python launch_demo.py
+
+
+FORMA 3 (Manual en dos terminales):
+  Terminal 1: cd api && uvicorn main:app --reload --port 8000
+  Terminal 2: cd models_venv && python demo_game_blockchain.py
+
+
+📚 DOCUMENTACIÓN DISPONIBLE
+═════════════════════════════════════════════════════════════════════════════════════
+
+├─ COMPILAR_Y_EJECUTAR.md          ← Esta documentación
+├─ DEMO_QUICK_START.md             ← Inicio rápido
+├─ BLOCKCHAIN_INTEGRATION.md       ← Documentación técnica
+├─ api/README.md                   ← API docs
+├─ models_venv/README_API.md       ← Guía para modelos
+└─ models_venv/DEMO_README.md      ← Detalles de la demo
+
+
+✅ CHECKLIST FINAL
+═════════════════════════════════════════════════════════════════════════════════════
+
+Antes de ejecutar, verifica:
+
+  ☐ Python 3.8+ instalado
+  ☐ /contract/.env está configurado
+  ☐ Contrato ERC-1155 deployado en Avalanche Testnet
+  ☐ Tienes AVAX en Fuji Testnet (faucet)
+  ☐ Ejecutaste: python compile_and_run.py (sin errores)
+  ☐ Leíste este documento hasta aquí
+
+
+═════════════════════════════════════════════════════════════════════════════════════
+
+                         ¡AHORA SÍ, A COMPILAR!
+
+                              python compile_and_run.py
+
+═════════════════════════════════════════════════════════════════════════════════════
+

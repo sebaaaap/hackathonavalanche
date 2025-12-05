@@ -9,13 +9,13 @@
         {
             "nombre": "Alice",
             "recursos": {
-                "madera": 3,
+                "madera": 0,
                 "arcilla": 0,
-                "trigo": 1,
-                "oveja": 0,
+                "trigo": 2,
+                "oveja": 1,
                 "piedra": 0
             },
-            "puntos_victoria": 2,
+            "puntos_victoria": 1,
             "pueblos": [],
             "castillos": [],
             "carreteras": [],
@@ -26,9 +26,9 @@
             "recursos": {
                 "madera": 2,
                 "arcilla": 0,
-                "trigo": 2,
-                "oveja": 3,
-                "piedra": 0
+                "trigo": 0,
+                "oveja": 1,
+                "piedra": 1
             },
             "puntos_victoria": 0,
             "pueblos": [],
