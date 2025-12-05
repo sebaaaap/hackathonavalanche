@@ -35,8 +35,8 @@ export default function GameBoard({ hexagons, buildings, selectedHex, onHexSelec
     }
 
     const angle = (posInRing / (ring === 0 ? 1 : ring * 6)) * Math.PI * 2
-    const x = Math.cos(angle) * ring * HEX_WIDTH * 0.75
-    const y = Math.sin(angle) * ring * HEX_HEIGHT * 0.75
+    const x = Math.cos(angle) * ring * HEX_WIDTH * 0.86
+    const y = Math.sin(angle) * ring * HEX_HEIGHT * 0.86
 
     return { x: x + 500, y: y + 400 }
   }

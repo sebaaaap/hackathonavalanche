@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Player, Hex, Building, ResourceCount } from "../types/catan"
 
 const RESOURCE_TYPES = ["forest", "hill", "field", "pasture", "mountain", "desert"]
@@ -60,7 +60,11 @@ function initializePlayers(): Player[] {
 
 export function useGameStore() {
   const [players, setPlayers] = useState<Player[]>(initializePlayers())
-  const [board, setBoard] = useState({ hexagons: initializeBoard() })
+  const [board, setBoard] = useState({ hexagons: [] as Hex[] })
+
+  useEffect(() => {
+    setBoard({ hexagons: initializeBoard() })
+  }, [])
   const [buildings, setBuildings] = useState<Building[]>([])
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [gamePhase, setGamePhase] = useState<"setup" | "rolling" | "building" | "trading" | "finished">("rolling")

@@ -1,97 +1,62 @@
-import type { Hex, Building } from "../../types/catan"
+"use client"
+import type { Hex } from "../../types/catan"
 
 interface HexagonProps {
   hex: Hex
   size: number
-  buildings: Building[]
+  buildings: any[]
   isSelected: boolean
 }
 
-const RESOURCE_COLORS: Record<string, string> = {
+const TILE_COLORS: Record<string, string> = {
   forest: "#2d5016",
-  hill: "#8b4513",
-  field: "#daa520",
-  pasture: "#90ee90",
-  mountain: "#a9a9a9",
-  desert: "#f4a460",
+  hill: "#a67c52",
+  field: "#f4d03f",
+  pasture: "#7cb342",
+  mountain: "#8b8b8b",
+  desert: "#e8d7b8",
+  water: "#4a90e2",
 }
 
-export default function Hexagon({ hex, size, buildings, isSelected }: HexagonProps) {
-  const points = []
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 3) * i
-    const x = size * Math.cos(angle)
-    const y = size * Math.sin(angle)
-    points.push([x, y])
-  }
+export default function Hexagon({ hex, size, isSelected }: HexagonProps) {
+  const angle = (Math.PI * 2) / 6
+  const centerX = 0
+  const centerY = 0
 
-  const pointsStr = points.map((p) => `${p[0]},${p[1]}`).join(" ")
-  const backgroundColor = RESOURCE_COLORS[hex.resourceType] || "#ccc"
+  const points = Array.from({ length: 6 })
+    .map((_, i) => {
+      const a = (angle * i) - (Math.PI / 6);
+      const x = Math.round((centerX + size * Math.cos(a)) * 100) / 100
+      const y = Math.round((centerY + size * Math.sin(a)) * 100) / 100
+      return `${x},${y}`
+    })
+    .join(" ")
 
-  const settlementPositions = [
-    { x: 0, y: -size * 0.7 },
-    { x: size * 0.6, y: -size * 0.35 },
-    { x: size * 0.6, y: size * 0.35 },
-    { x: 0, y: size * 0.7 },
-    { x: -size * 0.6, y: size * 0.35 },
-    { x: -size * 0.6, y: -size * 0.35 },
-  ]
+  const fill = TILE_COLORS[hex.resourceType] || "#cccccc"
 
   return (
-    <>
+    <g style={{ cursor: "pointer" }}>
+      {/* Main hexagon */}
       <polygon
-        points={pointsStr}
-        fill={backgroundColor}
-        stroke={isSelected ? "#ffd700" : "#333"}
+        points={points}
+        fill={fill}
+        stroke={isSelected ? "#ff6b6b" : "#333"}
         strokeWidth={isSelected ? 3 : 1}
-        className="hexagon"
+        opacity={0.8}
       />
-      <text x="0" y="0" textAnchor="middle" dy="0.3em" className="hex-number">
-        {hex.number || "-"}
-      </text>
 
-      {buildings.map((building, idx) => {
-        const pos = settlementPositions[building.vertexId] || { x: 0, y: 0 }
-        const PLAYER_COLORS = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#ffa502"]
-        const color = PLAYER_COLORS[building.playerId]
+      {/* Resource number circle */}
+      {hex.number && (
+        <>
+          <circle cx={centerX} cy={centerY} r={20} fill="#fff" stroke="#333" strokeWidth={2} />
+          <text x={centerX} y={centerY} textAnchor="middle" dy="0.3em" className="font-bold text-lg" fill="#000">
+            {hex.number}
+          </text>
+        </>
+      )}
 
-        if (building.type === "road") {
-          return (
-            <line
-              key={`road-${idx}`}
-              x1={settlementPositions[building.vertexId].x}
-              y1={settlementPositions[building.vertexId].y}
-              x2={settlementPositions[(building.vertexId + 1) % 6].x}
-              y2={settlementPositions[(building.vertexId + 1) % 6].y}
-              stroke={color}
-              strokeWidth="3"
-            />
-          )
-        }
-
-        if (building.type === "settlement") {
-          return (
-            <circle key={`settlement-${idx}`} cx={pos.x} cy={pos.y} r="8" fill={color} stroke="#fff" strokeWidth="2" />
-          )
-        }
-
-        if (building.type === "city") {
-          return (
-            <rect
-              key={`city-${idx}`}
-              x={pos.x - 7}
-              y={pos.y - 7}
-              width="14"
-              height="14"
-              fill={color}
-              stroke="#fff"
-              strokeWidth="2"
-            />
-          )
-        }
-
-        return null
-      })}
-    </>
+      {/* Selection highlight */}
+      {isSelected && <polygon points={points} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeDasharray="5,5" />}
+    </g>
   )
 }

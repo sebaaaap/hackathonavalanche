@@ -1,22 +1,31 @@
-import type { HexTile } from "@/client/pages/catan"
+import type { HexTile } from "../types/catan"
 
 const TILE_TYPES = ["forest", "hill", "field", "pasture", "mountain", "desert"] as const
 const NUMBERS = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 
+const FIXED_SEED = 42
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
 export function generateHexGrid(): HexTile[] {
   const hexes: HexTile[] = []
-  const SIZE = 60 // Tamaño de cada hexágono
-  const RADIUS = 3 // Radio del grid
+  const SIZE = 60
+  const RADIUS = 2
 
   let numberIndex = 0
+  let seedCounter = FIXED_SEED
 
   for (let x = -RADIUS; x <= RADIUS; x++) {
     for (let y = -RADIUS; y <= RADIUS; y++) {
-      if (Math.abs(x) + Math.abs(y) <= RADIUS) {
+      if (Math.abs(x + y) <= RADIUS) {
         const pixelX = 450 + x * SIZE * 1.5
         const pixelY = 400 + y * SIZE * Math.sqrt(3)
 
-        const tileType = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)]
+        const tileType = TILE_TYPES[Math.floor(seededRandom(seedCounter) * TILE_TYPES.length)]
+        seedCounter++
+
         const isDesert = tileType === "desert"
         const number = isDesert ? undefined : NUMBERS[numberIndex++]
 

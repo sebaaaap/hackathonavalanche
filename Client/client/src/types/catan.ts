@@ -47,3 +47,13 @@ export interface GameStoreState {
   selectedHex: number | null
   selectedBuildingType: string | null
 }
+
+export interface HexTile {
+  x: number
+  y: number
+  pixelX: number
+  pixelY: number
+  type: "forest" | "hill" | "field" | "pasture" | "mountain" | "desert"
+  number?: number
+  resource?: "wood" | "brick" | "sheep" | "wheat" | "ore"
+}
