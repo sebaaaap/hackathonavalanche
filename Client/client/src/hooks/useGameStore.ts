@@ -1,19 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
+// Nota: 'Hex' y 'Building' deben incluir 'q' y 'r' para que TypeScript no arroje errores
 import type { Player, Hex, Building, ResourceCount } from "../types/catan"
 
-// --- CONFIGURACIÓN DE LA BLOCKCHAIN/API ---
-// URL de tu API de Flask para la consulta de saldos
-const API_BALANCE_URL = "http://127.0.0.1:5001/consultar-saldos"
-
-// Mapeo de nombres de modelos en la API a IDs de jugadores locales
-const MODEL_TO_PLAYER_MAP: Record<string, number> = {
-  "MODELO_A": 0, // Jugador 1 -> ID 0
-  "MODELO_B": 1, // Jugador 2 -> ID 1
+// --- DEFINICIONES DE TIPOS (Re-declaradas aquí por si no se importan correctamente) ---
+// ASUMIMOS que Hex ahora incluye q y r, necesario para el posicionamiento
+type InternalHex = {
+  id: number;
+  type: string;
+  number: number;
+  q: number; // Coordenada Axial Q
+  r: number; // Coordenada Axial R
 }
 
-// Mapeo de nombres de recursos de la API (MADERA, ARCILLA) a claves locales (wood, brick)
+// --------------------------------------------------------------------------
+// --- CONFIGURACIÓN DE LA BLOCKCHAIN/API ---
+// --------------------------------------------------------------------------
+const API_BALANCE_URL = "http://127.0.0.1:5001/consultar-saldos"
+
+const MODEL_TO_PLAYER_MAP: Record<string, number> = {
+  "MODELO_A": 0,
+  "MODELO_B": 1,
+}
+
 const RESOURCE_API_TO_LOCAL: Record<string, keyof ResourceCount> = {
   "MADERA": "wood",
   "ARCILLA": "brick",
@@ -21,9 +31,6 @@ const RESOURCE_API_TO_LOCAL: Record<string, keyof ResourceCount> = {
   "TRIGO": "wheat",
   "MINERAL": "ore",
 }
-// ------------------------------------------
-
-// ... (RESOURCE_TYPES, RESOURCE_MAPPING, initializeBoard, initializePlayers se mantienen)
 
 const RESOURCE_TYPES = ["forest", "hill", "field", "pasture", "mountain", "desert"]
 const RESOURCE_MAPPING: Record<string, keyof ResourceCount> = {
@@ -34,12 +41,83 @@ const RESOURCE_MAPPING: Record<string, keyof ResourceCount> = {
   mountain: "ore",
 }
 
-function initializeBoard(): Hex[] {
-  // ... (El código de initializeBoard es muy largo, se omite aquí por brevedad, pero se mantiene en el archivo)
-  const hexagons: Hex[] = []
-  const numbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
-  // ...
-  return hexagons
+/**
+ * Función de utilidad para barajar (shuffle) un array.
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// --------------------------------------------------------------------------
+// --- FUNCIÓN initializeBoard CORREGIDA (IMPLEMENTACIÓN COMPLETA) ---
+// --------------------------------------------------------------------------
+function initializeBoard(): InternalHex[] {
+  // 1. Definición de la geometría: 19 hexágonos con coordenadas axiales (q, r)
+  // Estas coordenadas generan el patrón hexagonal 3-4-5-4-3 (o 1-6-12)
+  const coordinates = [
+    { q: 0, r: 0 }, // Centro
+
+    // Primer anillo (6 hexágonos)
+    { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
+    { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 },
+
+    // Segundo anillo (12 hexágonos)
+    { q: 2, r: 0 }, { q: 2, r: -1 }, { q: 1, r: -2 }, { q: 0, r: -2 },
+    { q: -1, r: -1 }, { q: -2, r: 0 }, { q: -2, r: 1 }, { q: -1, r: 2 },
+    { q: 0, r: 2 }, { q: 1, r: 1 }, { q: 2, r: -2 }, { q: -2, r: 2 },
+  ];
+
+  // 2. Definición del pool de recursos (Standard Catan)
+  const resourcePool = shuffleArray([
+    // 4 Bosque (Madera)
+    "forest", "forest", "forest", "forest",
+    // 4 Pasto (Oveja)
+    "pasture", "pasture", "pasture", "pasture",
+    // 4 Campo (Trigo)
+    "field", "field", "field", "field",
+    // 3 Colina (Ladrillo/Arcilla)
+    "hill", "hill", "hill",
+    // 3 Montaña (Mineral)
+    "mountain", "mountain", "mountain",
+    // 1 Desierto
+    "desert",
+  ]);
+
+  // 3. Definición del pool de números (excluyendo el 7)
+  const numberPool = shuffleArray([
+    2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12,
+  ]);
+
+  const hexagons: InternalHex[] = [];
+  let numberIndex = 0;
+
+  // 4. Mapear coordenadas y asignar tipos/números
+  coordinates.forEach((coord, index) => {
+    const type = resourcePool[index];
+    let number = 0;
+
+    // Asignar número si NO es el desierto
+    if (type !== 'desert') {
+      number = numberPool[numberIndex];
+      numberIndex++;
+    }
+
+    hexagons.push({
+      id: index,
+      type: type,
+      number: number,
+      q: coord.q, // <-- ASIGNACIÓN CORRECTA DE Q
+      r: coord.r, // <-- ASIGNACIÓN CORRECTA DE R
+    });
+  });
+
+  // Nota: Deberías implementar una colocación más estratégica (ej: no juntar 6 y 8)
+  // pero esta implementación aleatoria es suficiente para que el tablero se muestre.
+  return hexagons as Hex[];
 }
 
 function initializePlayers(): Player[] {
@@ -60,11 +138,13 @@ function initializePlayers(): Player[] {
 
 export function useGameStore() {
   const [players, setPlayers] = useState<Player[]>(initializePlayers())
-  const [board, setBoard] = useState({ hexagons: [] as Hex[] })
+  // Inicializamos el tablero llamando a la función corregida
+  const [board, setBoard] = useState({ hexagons: initializeBoard() })
 
-  useEffect(() => {
-    setBoard({ hexagons: initializeBoard() })
-  }, [])
+  // Nota: El useEffect para llamar a setBoard({ hexagons: initializeBoard() }) 
+  // ya no es necesario si llamamos a initializeBoard en la inicialización de useState, 
+  // lo cual es más eficiente. He comentado o quitado el useEffect duplicado.
+
   const [buildings, setBuildings] = useState<Building[]>([])
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [gamePhase, setGamePhase] = useState<"setup" | "rolling" | "building" | "trading" | "finished">("rolling")
@@ -72,7 +152,8 @@ export function useGameStore() {
   const [selectedBuildingType, setSelectedBuildingType] = useState<string | null>(null)
 
   // --------------------------------------------------------------------------
-  // --- FUNCIÓN CENTRAL PARA CONSULTAR Y ACTUALIZAR SALDOS ---
+  // --- FUNCIÓN CENTRAL PARA CONSULTAR Y ACTUALIZAR SALDOS (fetchBalances) ---
+  // ... (Esta función se mantiene inalterada)
   // --------------------------------------------------------------------------
   const fetchBalances = async () => {
     try {
@@ -88,27 +169,22 @@ export function useGameStore() {
         throw new Error("Respuesta de API inválida o error en el servidor.")
       }
 
-      const blockchainBalances = data.saldos // { MODELO_A: {...}, MODELO_B: {...} }
+      const blockchainBalances = data.saldos
 
-      // Crear un nuevo estado de jugadores basado en el estado actual
       const newPlayers = players.map((player) => {
         let updatedResources = { ...player.resources };
         let hasUpdated = false;
 
-        // Iterar sobre los modelos definidos en la API (MODELO_A, MODELO_B)
         for (const [modelName, balances] of Object.entries(blockchainBalances)) {
           const playerId = MODEL_TO_PLAYER_MAP[modelName];
 
-          // Si el ID del jugador actual coincide con el modelo de la API
           if (playerId === player.id) {
-            // Actualizar los recursos con los valores de la blockchain
             const resourcesFromAPI = (balances as any).recursos;
 
             for (const [apiResourceName, amount] of Object.entries(resourcesFromAPI)) {
               const localKey = RESOURCE_API_TO_LOCAL[apiResourceName];
 
               if (localKey) {
-                // Sobreescribir el saldo local con el saldo de la blockchain
                 updatedResources[localKey] = amount as number;
                 hasUpdated = true;
               }
@@ -116,7 +192,6 @@ export function useGameStore() {
           }
         }
 
-        // Si se encontraron actualizaciones, devolver el nuevo objeto Player
         if (hasUpdated) {
           return { ...player, resources: updatedResources };
         }
@@ -135,87 +210,58 @@ export function useGameStore() {
   // --- EFECTO PARA EL POLLING CONSTANTE ---
   // --------------------------------------------------------------------------
   useEffect(() => {
-    // 1. Ejecutar la consulta inmediatamente al montar el componente
     fetchBalances()
 
-    // 2. Configurar el intervalo para la consulta periódica (ej: cada 5 segundos)
     const intervalId = setInterval(fetchBalances, 5000)
 
-    // 3. Limpiar el intervalo al desmontar el componente (limpieza esencial de React)
     return () => clearInterval(intervalId)
-  }, []) // El array de dependencias vacío asegura que se ejecute solo una vez al inicio.
+  }, [])
 
   // --------------------------------------------------------------------------
-  // --- FUNCIONES DE ACCIÓN (Ajustes para usar los saldos de la blockchain) ---
+  // --- FUNCIONES DE ACCIÓN (Mantenidas) ---
   // --------------------------------------------------------------------------
 
   const rollDice = (total: number) => {
-    // Nota: Si la asignación de recursos se maneja en el servidor/blockchain, 
-    // solo se necesita llamar a fetchBalances después de un pequeño delay
-    // para dar tiempo a que la transacción se complete.
-
-    // Aquí se mantiene la vieja lógica local de asignación (que DEBE ser reemplazada 
-    // por una llamada POST de acuñación en un sistema real de blockchain).
     const newPlayers = [...players]
-
-    board.hexagons.forEach((hex) => {
-      // ... (Lógica de asignación local de recursos original)
-    })
-
-    // setPlayers(newPlayers) // Ya no es necesario si la asignación es en la blockchain
-
+    board.hexagons.forEach((hex) => { /* ... */ })
     setGamePhase("building")
-    // Forzar una actualización de saldos desde la blockchain después del tiro de dado
     setTimeout(fetchBalances, 2000);
   }
 
   const buildRoad = (hexId: number, edgeId: number) => {
     const currentPlayer = players[currentPlayerIndex]
 
-    // La verificación de saldo (if...) usa el saldo YA actualizado por el fetch.
     if (currentPlayer.resources.wood < 1 || currentPlayer.resources.brick < 1) {
-      alert("No tienes suficientes recursos (necesitas 1 madera y 1 ladrillo)")
+      // Usamos console.error o un modal en lugar de alert()
+      console.error("No tienes suficientes recursos (necesitas 1 madera y 1 ladrillo)")
       return
     }
 
     if (currentPlayer.buildings.roads <= 0) {
-      alert("No tienes más caminos disponibles")
+      console.error("No tienes más caminos disponibles")
       return
     }
 
-    // *** Aquí debería ir la llamada POST a la API /enviar-recursos ***
-    // Si la llamada POST es exitosa:
-    // 1. Añade la construcción localmente (como abajo)
+    // Aquí iría la llamada POST a la API para gastar los recursos en la blockchain
+    // ...
+
+    // Si la TX es exitosa, se actualiza el estado local de la construcción
     const buildingId = `${currentPlayerIndex}-road-${hexId}-${edgeId}`
-    const newBuilding: Building = { id: buildingId, hexId, vertexId: edgeId, type: "road", playerId: currentPlayerIndex }
+    const newBuilding: Building = { hexId, type: "road", playerId: currentPlayerIndex, id: buildingId, vertexId: edgeId }
 
     const newPlayers = [...players]
-    // 2. Comenta estas líneas ya que el gasto lo hará la blockchain:
-    // newPlayers[currentPlayerIndex].resources.wood -= 1
-    // newPlayers[currentPlayerIndex].resources.brick -= 1
     newPlayers[currentPlayerIndex].buildings.roads -= 1
 
     setBuildings([...buildings, newBuilding])
     setPlayers(newPlayers)
-
-    // 3. Forzar fetch para reflejar el gasto de la blockchain inmediatamente
     setTimeout(fetchBalances, 500);
   }
 
-  // Las demás funciones (buildSettlement, upgradeCity, tradeWithBank) seguirían el mismo patrón:
-  // 1. Verificar saldo local (ya actualizado por el fetch).
-  // 2. Llamar a la API POST para realizar la TX de gasto.
-  // 3. Si la TX es exitosa, actualizar el estado de buildings/VP localmente.
-  // 4. Llamar a fetchBalances para confirmar el nuevo saldo.
-
-  // ... (El resto de las funciones buildSettlement, upgradeCity, tradeWithBank, endTurn, selectHex se mantienen con la lógica original)
-
-  // Omitiendo el resto del código por brevedad, asumiendo que se mantiene inalterado
   const buildSettlement = (hexId: number, vertexId: number) => { /* ... */ }
   const upgradeCity = (hexId: number, vertexId: number) => { /* ... */ }
   const tradeWithBank = (give: Record<string, number>, receive: Record<string, number>) => { /* ... */ }
   const endTurn = () => { /* ... */ }
-  const selectHex = (hexId: number) => { /* ... */ }
+  const selectHex = (hexId: number) => setSelectedHex(hexId);
 
 
   return {
@@ -234,6 +280,6 @@ export function useGameStore() {
     tradeWithBank,
     endTurn,
     selectHex,
-    fetchBalances, // Exportamos la función por si se necesita una actualización manual
+    fetchBalances,
   }
 }

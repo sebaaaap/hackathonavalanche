@@ -6,6 +6,8 @@ interface HexagonProps {
   size: number
   buildings: any[]
   isSelected: boolean
+  // Opcional: Prop para controlar la orientación desde fuera
+  orientation?: "flat" | "pointy"
 }
 
 const TILE_COLORS: Record<string, string> = {
@@ -18,14 +20,25 @@ const TILE_COLORS: Record<string, string> = {
   water: "#4a90e2",
 }
 
-export default function Hexagon({ hex, size, isSelected }: HexagonProps) {
+export default function Hexagon({ hex, size, isSelected, orientation = "flat" }: HexagonProps) {
   const angle = (Math.PI * 2) / 6
   const centerX = 0
   const centerY = 0
 
+  // CALCULO DEL ÁNGULO:
+  // Si queremos "Flat-topped" (Lado plano arriba): offset = 0
+  // Si queremos "Pointy-topped" (Punta arriba): offset = Math.PI / 6 (30 grados) o -Math.PI/2 (-90 grados para empezar arriba)
+
+  // Tu código original tenía offset de 30° (Punta arriba). 
+  // Aquí lo ajusto a 0° para Lado Plano Arriba, o -90° para Punta Arriba estricta.
+  const angleOffset = orientation === "flat"
+    ? 0
+    : -Math.PI / 2; // -90 grados asegura que el primer punto sea la punta superior exacta
+
   const points = Array.from({ length: 6 })
     .map((_, i) => {
-      const a = (angle * i) - (Math.PI / 6);
+      // Aplicamos el offset según la orientación deseada
+      const a = (angle * i) + angleOffset;
       const x = Math.round((centerX + size * Math.cos(a)) * 100) / 100
       const y = Math.round((centerY + size * Math.sin(a)) * 100) / 100
       return `${x},${y}`
@@ -48,15 +61,30 @@ export default function Hexagon({ hex, size, isSelected }: HexagonProps) {
       {/* Resource number circle */}
       {hex.number && (
         <>
-          <circle cx={centerX} cy={centerY} r={20} fill="#fff" stroke="#333" strokeWidth={2} />
-          <text x={centerX} y={centerY} textAnchor="middle" dy="0.3em" className="font-bold text-lg" fill="#000">
+          <circle cx={centerX} cy={centerY} r={size * 0.4} fill="#fff" stroke="#333" strokeWidth={2} />
+          <text
+            x={centerX}
+            y={centerY}
+            textAnchor="middle"
+            dy="0.3em"
+            className="font-bold text-lg select-none pointer-events-none"
+            fill="#000"
+          >
             {hex.number}
           </text>
         </>
       )}
 
       {/* Selection highlight */}
-      {isSelected && <polygon points={points} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeDasharray="5,5" />}
+      {isSelected && (
+        <polygon
+          points={points}
+          fill="none"
+          stroke="#ff6b6b"
+          strokeWidth={2}
+          strokeDasharray="5,5"
+        />
+      )}
     </g>
   )
 }
