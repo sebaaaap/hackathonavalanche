@@ -1,12 +1,19 @@
 import os
 import json
 from flask import Flask, jsonify, request
+# --- IMPORTA CORS ---
+from flask_cors import CORS
+# --- (Otras importaciones) ---
 from dotenv import load_dotenv
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
-from solcx import compile_source, install_solc, set_solc_version
+from solcx import install_solc, set_solc_version, compile_source
+# ...
 
 app = Flask(__name__)
+# --- INICIALIZA CORS ---
+# Permite solicitudes desde tu frontend React (localhost:3000)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 # --- CONFIGURACIÓN DE CLAVES Y ENDPOINTS ---
 load_dotenv()
@@ -16,6 +23,8 @@ RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc"
 # --- Mapeo de Cuentas (Nombres a Claves/Direcciones) ---
 def get_account_details(private_key):
     """Función para obtener la dirección a partir de la clave privada."""
+    if not private_key:
+        return None
     try:
         w3_temp = Web3()
         account = w3_temp.eth.account.from_key(private_key)
@@ -25,24 +34,25 @@ def get_account_details(private_key):
 
 # Definimos las claves y obtenemos los detalles de la cuenta.
 ACCOUNT_MAP = {
-    # El Banco es el Owner. Usamos PRIVATE_KEY_BANCO para la clave del Owner (por consistencia)
-    # NOTA: Si usaste PRIVATE_KEY_ADMIN_L1 para el despliegue, la línea de abajo debe usar esa variable.
-    # He corregido aquí para usar la variable de entorno que mejor representa al Owner:
-    "BANCO": get_account_details(os.getenv("PRIVATE_KEY_ADMIN_L1")), # <--- CORRECCIÓN RECOMENDADA
-    
-    # Usuarios (Deben tener CLAVES PRIVADAS ÚNICAS)
+    "BANCO": get_account_details(os.getenv("PRIVATE_KEY_ADMIN_L1")),
     "MODELO_A": get_account_details(os.getenv("PRIVATE_KEY_MODELO_A")),
     "MODELO_B": get_account_details(os.getenv("PRIVATE_KEY_MODELO_B")),
 }
 
 # --- VALIDACIÓN Y DEFINICIÓN DEL OWNER ---
 for name, details in ACCOUNT_MAP.items():
-    if details is None:
-        raise ValueError(f"❌ Error: La clave privada para {name} en el .env es inválida o no existe.")
+    if details is None and name != "BANCO": # Permitimos que BANCO pueda ser None si no lo estás usando para firmar
+         # Nota: Si PRIVATE_KEY_ADMIN_L1 es vital, usar raise ValueError aquí.
+         # Aquí asumimos que los modelos A y B SIEMPRE deben existir.
+         if os.getenv(f"PRIVATE_KEY_{name}") is None:
+             print(f"⚠️ Advertencia: Clave privada para {name} no encontrada. El modelo no podrá firmar transacciones.")
+         else:
+             raise ValueError(f"❌ Error: La clave privada para {name} en el .env es inválida.")
 
-OWNER_DETAILS = ACCOUNT_MAP["BANCO"]
-OWNER_ADDRESS = OWNER_DETAILS["address"]
-PRIVATE_KEY_OWNER = OWNER_DETAILS["private_key"]
+
+OWNER_DETAILS = ACCOUNT_MAP.get("BANCO")
+OWNER_ADDRESS = OWNER_DETAILS["address"] if OWNER_DETAILS else None
+PRIVATE_KEY_OWNER = OWNER_DETAILS["private_key"] if OWNER_DETAILS else None
 # -----------------------------
 
 # Rutas para compilación
@@ -55,6 +65,16 @@ RECURSOS_IDS = {
     "MADERA": 1, "ARCILLA": 2, "OVEJA": 3, "TRIGO": 4, "MINERAL": 5
 }
 
+# ----------------------------------------------------
+# --- SOLUCIÓN 1 & 2: DEFINICIÓN DE IDS Y MAPEO ---
+# ----------------------------------------------------
+# 1. Definimos la lista de IDs (Variable faltante en el prompt anterior)
+TODOS_LOS_IDS = list(RECURSOS_IDS.values()) 
+
+# 2. Creamos el mapeo inverso (ID a Nombre) para usar en consultar_saldos
+ID_A_NOMBRE = {v: k for k, v in RECURSOS_IDS.items()}
+# ----------------------------------------------------
+
 # --- PREPARACIÓN (Carga de ABI y Web3) ---
 if not CONTRACT_ADDRESS:
     raise ValueError("❌ Error: Verifica CATAN_ADDRESS en el .env.")
@@ -65,6 +85,7 @@ w3.middleware_onion.inject(geth_poa_middleware, layer=0)
 print(f"✅ Owner del contrato: {OWNER_ADDRESS}")
 
 print("⚙️  Cargando contrato (Compilando para obtener ABI)...")
+# ... (Código de compilación y carga de contrato)
 install_solc('0.8.20')
 set_solc_version('0.8.20')
 
@@ -88,6 +109,7 @@ print(f"✅ Servidor listo. Controlando contrato en: {CONTRACT_ADDRESS}")
 # --- EL ENDPOINT CON LÓGICA CONDICIONAL ---
 @app.route('/enviar-recursos', methods=['POST'])
 def enviar_recursos():
+    # ... (El código de enviar_recursos se mantiene inalterado)
     try:
         data = request.json
         
@@ -101,10 +123,10 @@ def enviar_recursos():
             return jsonify({"error": "Faltan parámetros requeridos (origen, destino, recursos)"}), 400
         
         # 1.1 Mapear Origen y Destino a Detalles de Cuenta
-        if origen_name not in ACCOUNT_MAP:
-             return jsonify({"error": f"Origen '{origen_name}' no es un modelo configurado."}), 400
-        if destino_name not in ACCOUNT_MAP:
-             return jsonify({"error": f"Destino '{destino_name}' no es un modelo configurado."}), 400
+        if origen_name not in ACCOUNT_MAP or ACCOUNT_MAP[origen_name] is None:
+             return jsonify({"error": f"Origen '{origen_name}' no es un modelo configurado o su clave es inválida."}), 400
+        if destino_name not in ACCOUNT_MAP or ACCOUNT_MAP[destino_name] is None:
+             return jsonify({"error": f"Destino '{destino_name}' no es un modelo configurado o su clave es inválida."}), 400
         
         # Validar que Origen y Destino no sean la misma cuenta
         if origen_name == destino_name:
@@ -204,6 +226,63 @@ def enviar_recursos():
              error_message = "Transacción revertida por el contrato inteligente (ej: saldo insuficiente, o falta de permisos)."
         
         return jsonify({"status": "error", "mensaje": f"Error al procesar la transacción. Causa: {error_message}"}), 500
+    
+# ----------------------------------------------------
+# --- FUNCIÓN CORREGIDA PARA CONSULTAR SALDOS ---
+# ----------------------------------------------------
+@app.route('/consultar-saldos', methods=['GET'])
+def consultar_saldos():
+    try:
+        # Direcciones de las cuentas que queremos consultar (MODELO_A y MODELO_B)
+        addresses_to_check = [
+            ACCOUNT_MAP["MODELO_A"]["address"],
+            ACCOUNT_MAP["MODELO_B"]["address"],
+        ]
+        
+        # 1. Preparar la lista de cuentas y IDs para balanceOfBatch
+        all_accounts = []
+        for addr in addresses_to_check:
+            all_accounts.extend([addr] * len(TODOS_LOS_IDS))
+
+        all_ids = TODOS_LOS_IDS * len(addresses_to_check)
+        
+        # 2. Llamada a balanceOfBatch (lectura eficiente de la blockchain)
+        balances_list = contract.functions.balanceOfBatch(
+            all_accounts,
+            all_ids
+        ).call()
+
+        # 3. Formatear la respuesta
+        results = {}
+        balance_index = 0
+        
+        # Iterar sobre las cuentas A y B para reestructurar la respuesta
+        for account_name in ["MODELO_A", "MODELO_B"]:
+            model_address = ACCOUNT_MAP[account_name]["address"]
+            
+            results[account_name] = {
+                "address": model_address,
+                "recursos": {}
+            }
+            
+            # Asignar los saldos obtenidos a cada recurso
+            for i in range(len(TODOS_LOS_IDS)):
+                token_id = TODOS_LOS_IDS[i]
+                balance = balances_list[balance_index]
+                
+                # --- CORRECCIÓN CLAVE ---
+                # Usamos el nuevo diccionario ID_A_NOMBRE (ID a Nombre) en lugar de RECURSOS_IDS
+                resource_name = ID_A_NOMBRE.get(token_id, f"ID_{token_id}")
+                
+                results[account_name]["recursos"][resource_name] = balance
+                balance_index += 1
+        
+        # Retorna el resultado como JSON
+        return jsonify({"status": "success", "saldos": results}), 200
+
+    except Exception as e:
+        print(f"❌ Error en la consulta de saldos: {e}")
+        return jsonify({"status": "error", "mensaje": f"Error al consultar saldos. Causa: {str(e)}"}), 500
 
 if __name__ == '__main__':
     # La API empieza a escuchar
