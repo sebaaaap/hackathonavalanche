@@ -1,0 +1,74 @@
+{
+    "turno_actual": "Jugador",
+    "dados": {
+        "d1": 0,
+        "d2": 0,
+        "total": 0
+    },
+    "jugadores": [
+        {
+            "nombre": "Alice",
+            "recursos": {
+                "madera": 3,
+                "arcilla": 0,
+                "trigo": 1,
+                "oveja": 0,
+                "piedra": 0
+            },
+            "puntos_victoria": 2,
+            "pueblos": [],
+            "castillos": [],
+            "carreteras": [],
+            "cartas_desarrollo": []
+        },
+        {
+            "nombre": "Bob",
+            "recursos": {
+                "madera": 2,
+                "arcilla": 0,
+                "trigo": 2,
+                "oveja": 3,
+                "piedra": 0
+            },
+            "puntos_victoria": 0,
+            "pueblos": [],
+            "castillos": [],
+            "carreteras": [],
+            "cartas_desarrollo": []
+        }
+    ],
+    "mapa": [
+        {
+            "recurso": "unknown",
+            "numero": 0,
+            "pueblos": [],
+            "castillos": []
+        },
+        {
+            "recurso": "unknown",
+            "numero": 0,
+            "pueblos": [],
+            "castillos": []
+        },
+        {
+            "recurso": "unknown",
+            "numero": 0,
+            "pueblos": [],
+            "castillos": []
+        },
+        {
+            "recurso": "unknown",
+            "numero": 0,
+            "pueblos": [],
+            "castillos": []
+        },
+        {
+            "recurso": "unknown",
+            "numero": 0,
+            "pueblos": [],
+            "castillos": []
+        }
+    ],
+    "ladron": null,
+    "eventos_recientes": []
+}

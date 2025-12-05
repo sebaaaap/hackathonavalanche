@@ -1,0 +1,27 @@
+Reglas básicas de Catan:
+
+1. Objetivo:
+   - Ser el primero en alcanzar 10 puntos de victoria.
+   - Puntos se obtienen con pueblos, castillos, cartas de desarrollo y carreteras más largas.
+
+2. Recursos:
+   - Madera, Arcilla, Trigo, Oveja, Piedra
+   - Se obtienen según los pueblos que tengas en los hexágonos cuyo número salga en los dados.
+
+3. Construcciones:
+   - Pueblo: 1 madera, 1 arcilla, 1 trigo, 1 oveja
+   - Carretera: 1 madera, 1 arcilla
+   - Castillo: 2 madera, 3 piedra, 2 trigo
+
+4. Cartas de desarrollo:
+   - Caballero: permite mover al ladrón
+   - Progreso: permite efectos especiales (ej. construir gratis)
+   - Punto de victoria: suma 1 punto directamente
+
+5. Comercio:
+   - Con el banco: 4:1 de cualquier recurso o 3:1 si tienes puerto genérico
+   - Entre jugadores: libre negociación de recursos
+
+6. Ladrón:
+   - Sale cuando se tira un 7
+   - Bloquea un hexágono y roba un recurso a un jugador con pueblo/castillo adyacente

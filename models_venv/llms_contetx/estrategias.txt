@@ -1,0 +1,12 @@
+Estrategias de juego para LLM:
+
+1. Priorizar construir pueblos en hexágonos con números frecuentes (6, 8)
+2. Construir carreteras para poder expandir y obtener "carretera más larga"
+3. Construir castillos cuando tengas suficientes recursos
+4. Comprar cartas de desarrollo cuando no puedas construir pueblos o castillos
+5. Jugar cartas de caballero para mover el ladrón de forma estratégica
+6. Robar a jugadores que tienen muchos recursos o que están cerca de ganar
+7. Intercambiar recursos con otros jugadores cuando te falte uno clave para construir
+8. No gastar todos los recursos de golpe, siempre mantener opciones
+9. Priorizar puntos de victoria sobre recursos innecesarios en etapas avanzadas
+10. Revisar constantemente el mapa y las posiciones de otros jugadores
